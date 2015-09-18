@@ -6,6 +6,14 @@
 
 const int LINE_MAX = 256;
 
+enum {
+    CMD_DATE,
+    CMD_ECHO,
+    CMD_EXIT,
+    CMD_HELP,
+    NUM_COMMANDS
+} Commands;
+
 int cmd_date(int argc, char *argv[]);
 int cmd_echo(int argc, char *argv[]);
 int cmd_exit(int argc, char *argv[]);
@@ -107,10 +115,11 @@ void populateArgvWithStrings(char *argv[],
 }
 
 
-void process_line(char line[LINE_MAX + 1]) {
+int processLine(char line[LINE_MAX + 1]) {
     int i = 0;
     int argc = 0;
     char **argv;
+    int numCommand;
 
     argc = createArgc(line);
 
@@ -121,18 +130,26 @@ void process_line(char line[LINE_MAX + 1]) {
     
     populateArgvWithStrings(argv, line);
 
-    fprintf(stdout, "Number of arguments is: %d\n", argc);
+    /* fprintf(stdout, "Number of arguments is: %d\n", argc); */
 
-    for(i = 0; i < argc; i++) {
-        fprintf(stdout, "Argument number %d is: %s\n", i, argv[i]);
+    /* for(i = 0; i < argc; i++) { */
+    /*     fprintf(stdout, "Argument number %d is: %s\n", i, argv[i]); */
+    /* } */
+
+    while(numCommand < NUM_COMMANDS) {
+        if(!strcmp(argv[0], commands[numCommand].name)) {
+            return commands[numCommand].functionp(argc, argv);
+        }
+        numCommand++;
     }
-
+    
    if (!strncmp(line, "ls", LINE_MAX)) {
        fprintf(stdout, "your files here\n");
 
    } else {
        fprintf(stdout, "%s\n", line);
    }
+   return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -155,7 +172,7 @@ int main(int argc, char *argv[]) {
       return 1;
 
    } else {
-      process_line(line);
+      processLine(line);
       return 0;
    }
 }
@@ -167,6 +184,7 @@ int cmd_date(int argc, char *argv[]) {
 
 int cmd_echo(int argc, char *argv[]) {
     /* int time = gettimeofday(); */
+    fprintf(stdout, "The command is echo\n");
     return 0;
 }
 
