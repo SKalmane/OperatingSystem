@@ -19,7 +19,114 @@ struct commandEntry {
                 {"exit", cmd_exit},
                 {"help", cmd_help}};
 
+int isBlankSpace(char c) {
+    return ((c == ' ') ||
+            (c == '\n') ||
+            (c == '\t'));
+}
+
+int createArgc(char line[LINE_MAX + 1]) {
+    int index = 0;
+    int argc = 0;
+    while(line[index] != '\0') {
+        // Increment argc if there is a space between inputs
+        if(isBlankSpace(line[index]) &&
+           (index > 0) &&
+           !isBlankSpace(line[index-1])) {
+            argc++;
+        }
+        
+        // Increment argc if this is the last input
+        if(!isBlankSpace(line[index]) &&
+           (line[index+1] == '\0')) {
+            argc++;
+        }
+
+        index++;
+    }
+    return argc;
+}
+
+// Allocate memory for each input argument provided
+void allocateMemForArgv(int argc, char *argv[], 
+                        char line[LINE_MAX + 1]) {
+    int index = 0;
+    int i = 0;
+    int stringLen = 0;
+
+    while(line[index] != '\0') {
+        stringLen++;
+        if(isBlankSpace(line[index]) &&
+           (index > 0) &&
+           !isBlankSpace(line[index-1])) {
+            argv[i] = (char *)(malloc((stringLen)*sizeof(char *)));
+            i++;
+            stringLen = 0;
+        }
+        
+        // If this is the last input
+        if(!isBlankSpace(line[index]) &&
+           (line[index+1] == '\0')) {
+            argv[i] = (char *)(malloc((stringLen)*sizeof(char *)));
+            i++;
+            stringLen = 0;
+        }
+        index++;
+    }
+}
+
+void populateArgvWithStrings(char *argv[], 
+                             char line[LINE_MAX + 1]) {
+    int index = 0, stringLen = 0, numArg = 0;
+
+    // Populate argv with the arguments
+    while(line[index] != '\0') {
+        
+        if(!isBlankSpace(line[index])) {
+            argv[numArg][stringLen] = line[index];
+            stringLen++;
+        }
+
+        if(isBlankSpace(line[index]) &&
+           (index > 0) &&
+           !isBlankSpace(line[index-1])) {
+            argv[numArg][stringLen+1] = '\0';
+            numArg++;
+            stringLen = 0;
+        }
+        
+        // If it is the last input
+        if(!isBlankSpace(line[index]) &&
+           (line[index+1] == '\0')) {
+            argv[numArg][stringLen+1] = '\0';
+            numArg++;
+            stringLen = 0;
+        }
+        index++;
+    }
+}
+
+
 void process_line(char line[LINE_MAX + 1]) {
+    int i = 0;
+    int argc = 0;
+    char **argv;
+
+    argc = createArgc(line);
+
+    // Allocate the entire argv array
+    argv = (char **)(malloc(argc*sizeof(char *)));
+
+    allocateMemForArgv(argc, argv, line);
+    
+    populateArgvWithStrings(argv, line);
+
+    fprintf(stdout, "Number of arguments is: %d\n", argc);
+
+    for(i = 0; i < argc; i++) {
+        fprintf(stdout, "Argument number %d is: %s\n", i, argv[i]);
+    }
+
    if (!strncmp(line, "ls", LINE_MAX)) {
        fprintf(stdout, "your files here\n");
 
@@ -31,6 +138,9 @@ void process_line(char line[LINE_MAX + 1]) {
 int main(int argc, char *argv[]) {
    char line[LINE_MAX + 1];
    int c, index;
+
+   // Print the prompt
+   fprintf(stdout, "%s", "$ ");
 
    index = 0;
    c = fgetc(stdin);
@@ -51,7 +161,21 @@ int main(int argc, char *argv[]) {
 }
 
 int cmd_date(int argc, char *argv[]) {
-    int time = gettimeofday();
-    
-    
+    /* int time = gettimeofday(); */
+    return 0;
+}
+
+int cmd_echo(int argc, char *argv[]) {
+    /* int time = gettimeofday(); */
+    return 0;
+}
+
+int cmd_exit(int argc, char *argv[]) {
+    /* int time = gettimeofday(); */
+    return 0;
+}
+
+int cmd_help(int argc, char *argv[]) {
+    /* int time = gettimeofday(); */
+    return 0;
 }
