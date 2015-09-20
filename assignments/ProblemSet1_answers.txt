@@ -1,0 +1,173 @@
+			Last revised 29-Aug-15
+
+			    Problem Set 1
+
+		 Harvard Extension School CSCI E-92:
+	     Principles of Operating Systems - Fall 2015
+
+		 Due: Midnight on September 20, 2015
+
+
+As described in the syllabus, submit the solution to all problems in
+this Problem Set using "git" with the tag ps1-submit.
+
+1. (5 Points) Multiprogramming.  Tanenbaum 3/e 1.1 (Tanenbaum 2/e
+   1.2).  In additon, give at least two reasons for having
+   multiprogramming.
+   
+Answer: Multiprogramming was the concept where-in the CPU usage was
+increased substantially by having it process a different job while
+it was waiting for the I/O to finish. This was done by partitioning
+the memory into several pieces and having the CPU run a different
+job when the present job was waiting for I/O. There were many
+benefits of this:
+   a) The CPU usage time was significantly increased, allowing
+   higher efficiency and lesser down time of the CPU.
+   b) This also led to a substantial increase in the speed of
+   processing of each job
+   c) Multiprogramming also led to time-sharing which allows
+   processes to be given a small quantum of time to run and
+   then disabled, allowing a different process to run. This
+   ensured that no process had starvation, increasing fairness
+   in the system.
+
+2. (5 Points) Which of the following instructions should be allowed only in kernel mode?
+  (a) Disable all interrupts.
+  (b) Read the time-of-day clock.
+  (c) Set the time-of-day clock.
+  (d) Change the memory map.
+  In addition, for each subsection a-d,
+  describe what problems would be caused by allowing the instruction to run when not in kernel mode.
+   Answer: In the above (a) and (d) should be allowed only in kernel mode.
+   The following issues might be seen if the instructions are
+   allowed to be run when in user mode:
+   (a) If all interrupts can be disabled in user mode, this could
+   lead to hardware interrupts like disc full or important software
+   interrupts like Invalid Memory address etc to be missed. This
+   can not only result in incorrect results for the program but
+   also may cause fatal issues (rewriting device files etc)
+   (b) Reading the clock by user mode should be allowed
+   (c) Setting the clock can also be allowed since this is not the
+   machine clock and should not have any impact on the functioning
+   of the operating systems. However, if other user programs depend
+   upon this information, they could potentially be affected.
+   (d) Changing the memory map without the operating system's
+   approval could result in changes in addresses of the stack and
+   heap. This could also mean that the information the operating
+   system has about free regions is no longer up-to-date and may
+   cause incorrect writes and reads.
+
+3. (5 Points) In Sec. 2.3.4, a situation with a high-priority process,
+   H, and a low-priority process, L, was described, which led to H
+   looping forever  Does the same problem occur if round-robin scheduling
+   is used instead of priority scheduling?  Discuss.
+   Answer: If Round Robin scheduling was used, L would have been received
+   a quantum of time to run sometime after H completed its quantum. This
+   would have meant that L would have eventually exited its critical
+   section and reset its mutex. Therefore, the priority inversion
+   problem would not have taken place if round-robin scheduling was used,
+   simply because, in this scenario, H and L do would not have different
+   priorities and would both receive a quantum of time to run.
+   
+4. (10 Points) How could an operating system that can disable interrupts
+   implement semaphores?  You must include pseudo-code for your solution.
+   Answer: Semaphores have 2 operations - DOWN and UP.
+   DOWN checks if the value of the semaphore is greater than 0.
+   If so, it decrements the value. If value is 0, the process calling
+   DOWN is put to sleep. This checking, decrementing and possibly putting
+   the process to sleep - all needs to happen in 1 indivisible operation.
+
+   UP increments the value of the semaphore if there are no processes
+   sleeping on that semaphore. If there are sleeping processes, the value
+   of the semaphore is left at 0, but one of the processes is woken up,
+   according to some scheduling algorithm. The UP procedure should be
+   atomic as well.
+
+   The atomicity of the UP and DOWN operations can be achieved by
+   disabling the interrupts.
+
+   Pseudocode:
+   
+   struct semaphore {
+   	  int value;
+	  set_of_sleeping_processes s;
+	  void DOWN(int processID);
+	  void UP(set_of_sleeping_processes s);
+   }
+
+   void DOWN(int processID) {
+       int putToSleep = FALSE;
+
+       disableInterrupts();
+       
+       if(value <= 0) {
+       	   putToSleep = TRUE;
+	   s.addToSleepingProcesses(processID);
+       } else {
+       	 value--;
+	 enableInterrupts();
+       }
+
+       if(putToSleep) {
+         putToSleep = FALSE:
+         sleep(processID);
+	 enableInterrupts();
+       }
+
+   }
+
+   void UP(set_of_sleeping_processes s) {
+       disableInterrupts();
+
+       if(!s.isEmpty()) {
+           // There are processes sleeping on this
+	   // semaphore
+       	   int processID = s.pickProcessToWakeUp();
+	   wakeup(processID);
+       } else {
+       	   value++;
+       }
+       
+       enableInterrupts();
+   }
+   
+
+5. (10 Points) Implementing counting semaphores using binary
+   semaphores.  Tanenbaum 3/e 2.26 (Tanenbaum 2/e 2.24).  You must
+   include pseudo-code for your solution.  By "ordinary machine
+   instructions," we mean all facilities that are available through
+   the C Programming Language, for example.  Your solution should use
+   binary semaphores wherever mutual exclusion is needed.
+   Answer: 
+   Pseudocode:
+
+   struct counting_semaphore {
+       int value = K; // initial value of semaphore is K
+       set_of_sleeping_processes s;
+       binary_semaphore mutex;
+       binary_semaphore delay;
+       void DOWN(int processID);
+       void UP(set_of_sleeping_processes s);
+   }
+
+   counting_semaphore c;
+   
+   void DOWN(int processID) {
+   	mutex.DOWN(processID);
+	c.value--;
+   	if(c.value < 0) {
+          mutex.UP(processID);
+	  delay.DOWN(processID);
+	} else {
+	  mutex.UP(s);
+	}
+   }
+
+   void UP(set_of_sleeping_processes s) {
+   	mutex.DOWN(processID);
+	c.value++;
+	if(c.value <= 0) {
+    	   delay.UP(s);
+	   mutex.UP(s);
+	}
+   }
