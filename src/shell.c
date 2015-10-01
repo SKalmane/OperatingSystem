@@ -122,6 +122,7 @@ int getAndProcessInput() {
   char line[LINE_MAX + 1];
   int c = 0, index = 0;
   int status = 0;
+  
   // Print the prompt
   fprintf(stdout, "%s", "$ ");
   c = fgetc(stdin);
