@@ -31,6 +31,6 @@ int testSizeOfBlockHeader() {
 }
 
 int testMyMallocBasic() {
-  myMalloc(16);
+  myMalloc(15);
   return 0;
 }
